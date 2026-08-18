@@ -42,8 +42,7 @@ Student-Management-System/
 ### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/gangaprasadpyedekar-tech/student-management-system
-```
+git clone https://github.com/MailaGaneshReddy13/Student-management-system
 
 ### 2. Open the Project
 
