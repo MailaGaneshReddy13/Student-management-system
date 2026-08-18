@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Admin Dashboard - Online Student Management System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <!-- Load Chart.js for statistics rendering -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="bg-mesh">
+        <div class="bg-circle-1"></div>
+        <div class="bg-circle-2"></div>
+    </div>
+
+    <div class="dashboard-layout">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-brand">
+                <div class="user-avatar">A</div>
+                <h2>School Admin</h2>
+            </div>
+            <ul class="sidebar-menu">
+                <li class="sidebar-item active">
+                    <a href="#" data-target="sec-dashboard">📊 Dashboard Stats</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="#" data-target="sec-students">👥 Manage Students</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="#" data-target="sec-reports">📋 Performance Reports</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="#" data-target="sec-backup">💾 Data Backup & Import</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="#" data-target="sec-notices">📢 Noticeboard</a>
+                </li>
+                <li class="sidebar-item">
+                    <a href="#" data-target="sec-ai-assistant">🤖 Gemini AI Assistant</a>
+                </li>
+            </ul>
+            <div class="sidebar-footer">
+                <li class="sidebar-item" style="list-style: none;">
+                    <a href="/api/auth/logout" style="color: var(--danger);">🔒 Log Out</a>
+                </li>
+            </div>
+        </aside>
+
+        <!-- Main Dashboard Panel -->
+        <main class="dashboard-main">
+            <!-- Top Header -->
+            <header class="dashboard-header">
+                <div class="dashboard-title">
+                    <button class="menu-toggle" id="menu-toggle">☰</button>
+                    <h1>Administrative Portal</h1>
+                    <p>Manage, inspect, and update student performance indices.</p>
+                </div>
+                <div class="user-badge">
+                    <span>Logged in: <strong>Admin</strong></span>
+                </div>
+            </header>
+
+            <!-- ---------------------------------------------------- -->
+            <!-- Section: Dashboard Stats & Analytics -->
+            <!-- ---------------------------------------------------- -->
+            <section id="sec-dashboard" class="content-section active">
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-info">
+                            <h3>Total Students</h3>
+                            <p id="stat-total-students">0</p>
+                        </div>
+                        <div class="stat-icon blue">🎓</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-info">
+                            <h3>Class Average</h3>
+                            <p id="stat-avg-marks">0.0%</p>
+                        </div>
+                        <div class="stat-icon purple">📈</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-info">
+                            <h3>Attendance Rate</h3>
+                            <p id="stat-avg-attendance">0.0%</p>
+                        </div>
+                        <div class="stat-icon green">⏱️</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-info">
+                            <h3>Overall Pass Rate</h3>
+                            <p id="stat-pass-rate">0.0%</p>
+                        </div>
+                        <div class="stat-icon red">🎯</div>
+                    </div>
+                </div>
+
+                <div class="analytics-grid">
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Pass vs Fail Distribution</h3>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="chart-pass-fail"></canvas>
+                        </div>
+                    </div>
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Department Averages</h3>
+                        </div>
+                        <div class="chart-container">
+                            <canvas id="chart-performance"></canvas>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card" style="margin-top: 25px;">
+                    <div class="card-header">
+                        <h3 class="card-title">⚠️ At-Risk Students (Attendance &lt; 75%)</h3>
+                    </div>
+                    <div class="table-responsive">
+                        <table class="table" id="at-risk-table">
+                            <thead>
+                                <tr>
+                                    <th>Student ID</th>
+                                    <th>Name</th>
+                                    <th>Department</th>
+                                    <th>Year</th>
+                                    <th>Attendance Rate</th>
+                                    <th>Total Days</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Loaded dynamically via JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Seed Demo Data Card -->
+                <div class="card" style="margin-top: 25px; border: 1px dashed rgba(99,102,241,0.4);">
+                    <div class="card-header">
+                        <h3 class="card-title">🧪 Demo Data Seeder</h3>
+                    </div>
+                    <p style="color: var(--text-muted); font-size: 0.92rem; margin-bottom: 16px;">
+                        Populate the system with <strong>5 sample students</strong> (with marks &amp; attendance) to explore all features. Already-existing students are safely skipped.
+                    </p>
+                    <button id="btn-seed-data" class="btn" style="width: auto; padding: 10px 24px;" onclick="seedDemoData()">⚡ Seed Sample Students</button>
+                    <p id="seed-result" style="margin-top: 12px; font-size: 0.85rem; color: var(--success); display:none;"></p>
+                </div>
+            </section>
+
+            <!-- ---------------------------------------------------- -->
+            <!-- Section: Student Management (CRUD) -->
+            <!-- ---------------------------------------------------- -->
+            <section id="sec-students" class="content-section">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Student Records</h3>
+                        <div class="filters-row">
+                            <input type="text" id="search-student" class="form-control search-input" placeholder="Search by name, email, or ID...">
+                            <select id="filter-dept" class="select-input">
+                                <option value="">All Departments</option>
+                                <option value="Computer Science">Computer Science</option>
+                                <option value="Information Technology">Information Technology</option>
+                                <option value="Electronics & Communication">Electronics & Communication</option>
+                                <option value="Mechanical Engineering">Mechanical Engineering</option>
+                                <option value="Civil Engineering">Civil Engineering</option>
+                                <option value="Business Administration">Business Administration</option>
+                            </select>
+                            <select id="filter-year" class="select-input">
+                                <option value="">All Years</option>
+                                <option value="1st Year">1st Year</option>
+                                <option value="2nd Year">2nd Year</option>
+                                <option value="3rd Year">3rd Year</option>
+                                <option value="4th Year">4th Year</option>
+                            </select>
+                            <button class="btn" style="width: auto; padding: 10px 20px;" onclick="openModal('modal-add-student')">+ Add Student</button>
+                        </div>
+                    </div>
+
+                    <div class="table-responsive">
+                        <table class="table" id="students-table">
+                            <thead>
+                                <tr>
+                                    <th>Student ID</th>
+                                    <th>Full Name</th>
+                                    <th>Email</th>
+                                    <th>Department</th>
+                                    <th>Year</th>
+                                    <th>Phone</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- Loaded dynamically via JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ---------------------------------------------------- -->
+            <!-- Section: Performance Reports -->
+            <!-- ---------------------------------------------------- -->
+            <section id="sec-reports" class="content-section">
+                <div class="card">
+                    <div class="card-header">
+                        <h3 class="card-title">Performance Sheet Generator</h3>
+                        <div class="filters-row">
+                            <select id="report-student-select" class="select-input" style="min-width: 250px;">
+                                <!-- Populated dynamically -->
+                            </select>
+                            <button class="btn" style="width: auto; padding: 10px 20px;" onclick="printReport()">Print Report Sheet</button>
+                        </div>
+                    </div>
+
+                    <!-- Dynamic Report Sheet Container -->
+                    <div id="report-card-container" style="display: none; padding: 20px; background: rgba(0,0,0,0.15); border-radius: 12px;">
+                        <div style="text-align: center; margin-bottom: 25px;">
+                            <h2>OFFICIAL ACADEMIC TRANSCRIPT & PERFORMANCE REPORT</h2>
+                            <p style="color: var(--text-muted);">Online Student Management System</p>
+                        </div>
+                        
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 30px;">
+                            <div>
+                                <p><strong>Student Name:</strong> <span id="rep-student-name"></span></p>
+                                <p><strong>Student ID:</strong> <span id="rep-student-id"></span></p>
+                                <p><strong>Department:</strong> <span id="rep-student-dept"></span></p>
+                                <p><strong>Academic Year:</strong> <span id="rep-student-year"></span></p>
+                            </div>
+                            <div>
+                                <p><strong>Email Address:</strong> <span id="rep-student-email"></span></p>
+                                <p><strong>Phone Number:</strong> <span id="rep-student-phone"></span></p>
+                                <p><strong>Date of Birth:</strong> <span id="rep-student-dob"></span></p>
+                            </div>
+                        </div>
+
+                        <h3 style="margin-bottom: 12px; border-bottom: 1px solid var(--border-color); padding-bottom: 6px;">Subject-Wise Grades</h3>
+                        <table class="table" style="margin-bottom: 25px;">
+                            <thead>
+                                <tr>
+                                    <th>Subject Name</th>
+                                    <th>Marks Obtained</th>
+                                    <th>Maximum Marks</th>
+                                    <th>Letter Grade</th>
+                                </tr>
+                            </thead>
+                            <tbody id="rep-marks-tbody">
+                                <!-- Populated dynamically -->
+                            </tbody>
+                        </table>
+
+                        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; margin-bottom: 30px;">
+                            <div class="card" style="padding: 15px; text-align: center;">
+                                <h4 style="font-size:0.8rem; color: var(--text-muted);">TOTAL MARKS</h4>
+                                <p style="font-size:1.5rem; font-weight:700;"><span id="rep-marks-obtained"></span> / <span id="rep-marks-max"></span></p>
+                            </div>
+                            <div class="card" style="padding: 15px; text-align: center;">
+                                <h4 style="font-size:0.8rem; color: var(--text-muted);">PERCENTAGE</h4>
+                                <p style="font-size:1.5rem; font-weight:700;" id="rep-percentage"></p>
+                            </div>
+                            <div class="card" style="padding: 15px; text-align: center;">
+                                <h4 style="font-size:0.8rem; color: var(--text-muted);">OVERALL GRADE</h4>
+                                <p><span id="rep-grade" class="badge badge-grade"></span></p>
+                            </div>
+                            <div class="card" style="padding: 15px; text-align: center;">
+                                <h4 style="font-size:0.8rem; color: var(--text-muted);">ATTENDANCE RATE</h4>
+                                <p style="font-size:1.5rem; font-weight:700;" id="rep-att-rate"></p>
+                            </div>
+                        </div>
+
+                        <h3 style="margin-bottom: 12px; border-bottom: 1px solid var(--border-color); padding-bottom: 6px;">Attendance Summary</h3>
+                        <p id="rep-att-details" style="color: var(--text-muted);"></p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ---------------------------------------------------- -->
+            <!-- Section: Data Backup & Import (File Handling) -->
+            <!-- ---------------------------------------------------- -->
+            <section id="sec-backup" class="content-section">
+                <div class="analytics-grid">
+                    <!-- Export Box -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Export Data Records (File Backup)</h3>
+                        </div>
+                        <p style="color: var(--text-muted); margin-bottom: 20px; font-size: 0.95rem;">
+                            Download all database records (students, marks, attendance) or only profile records into standard file formats for backup or migration.
+                        </p>
+                        <div style="display: flex; flex-direction: column; gap: 12px;">
+                            <a href="/api/admin/backup/export/json" class="btn" style="text-align: center; text-decoration: none;">Download JSON Backup (.json)</a>
+                            <a href="/api/admin/backup/export/csv" class="btn btn-secondary" style="text-align: center; text-decoration: none; color: var(--text-main);">Download Student Profiles (.csv)</a>
+                        </div>
+                    </div>
+
+                    <!-- Import Box -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Import Data Records (File Handling)</h3>
+                        </div>
+                        <p style="color: var(--text-muted); margin-bottom: 20px; font-size: 0.95rem;">
+                            Restore records from a previously generated JSON backup file or register multiple student profiles via a CSV template.
+                        </p>
+                        
+                        <div style="display: flex; flex-direction: column; gap: 20px;">
+                            <!-- JSON Import Form -->
+                            <form id="import-json-form" enctype="multipart/form-data" style="display: flex; flex-direction: column; gap: 8px;">
+                                <label style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted);">IMPORT JSON BACKUP</label>
+                                <div style="display: flex; gap: 10px;">
+                                    <input type="file" id="import-json-file" accept=".json" class="form-control" style="padding: 8px 12px;" required>
+                                    <button type="submit" class="btn" style="width: auto; padding: 10px 20px;">Upload</button>
+                                </div>
+                            </form>
+
+                            <!-- CSV Import Form -->
+                            <form id="import-csv-form" enctype="multipart/form-data" style="display: flex; flex-direction: column; gap: 8px;">
+                                <label style="font-size: 0.8rem; font-weight: 600; color: var(--text-muted);">IMPORT CSV PROFILES</label>
+                                <div style="display: flex; gap: 10px;">
+                                    <input type="file" id="import-csv-file" accept=".csv" class="form-control" style="padding: 8px 12px;" required>
+                                    <button type="submit" class="btn btn-secondary" style="width: auto; padding: 10px 20px; color: var(--text-main);">Upload</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ---------------------------------------------------- -->
+            <!-- Section: Noticeboard (Broadcasting Announcements) -->
+            <!-- ---------------------------------------------------- -->
+            <section id="sec-notices" class="content-section">
+                <div class="analytics-grid">
+                    <!-- Create Notice Card -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Publish General Announcement</h3>
+                        </div>
+                        <form id="create-notice-form">
+                            <div class="form-group">
+                                <label for="notice-title">Notice Title</label>
+                                <input type="text" id="notice-title" class="form-control" placeholder="e.g. Scheduled Maintenance / Exam Dates" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="notice-content">Message Content</label>
+                                <textarea id="notice-content" class="form-control" rows="5" placeholder="Enter notice details for students..." style="resize: vertical; font-family: var(--font);" required></textarea>
+                            </div>
+                            <button type="submit" class="btn">Publish Bulletin</button>
+                        </form>
+                    </div>
+
+                    <!-- Manage Notices Card -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Active Announcements Feed</h3>
+                        </div>
+                        <div class="announcement-list" id="admin-notice-list">
+                            <!-- Populated dynamically via JS -->
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ---------------------------------------------------- -->
+            <!-- Section: Gemini AI Assistant -->
+            <!-- ---------------------------------------------------- -->
+            <section id="sec-ai-assistant" class="content-section">
+                <div class="analytics-grid">
+                    <!-- Prompt Box -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title" style="display:flex; align-items:center; gap:8px;">
+                                <span>🤖</span> Gemini Administrator Assistant
+                            </h3>
+                        </div>
+                        <p style="color: var(--text-muted); font-size: 0.9rem; margin-bottom: 20px;">
+                            Prompt Gemini to generate administrative drafts, announcements, warnings, or ask analytical strategy queries.
+                        </p>
+                        <form id="ai-prompt-form">
+                            <div class="form-group">
+                                <label for="ai-prompt-input">Task prompt for Gemini</label>
+                                <textarea id="ai-prompt-input" class="form-control" rows="4" placeholder="e.g. Draft a notice regarding the computer science final exam scheduled for next Monday. Keep it formal and include instructions for reaching 10 mins early." required style="font-family: var(--font); resize: vertical;"></textarea>
+                            </div>
+                            <div style="display: flex; gap: 10px; flex-wrap: wrap; margin-top: 15px;">
+                                <button type="submit" id="btn-submit-ai-prompt" class="btn" style="width: auto; padding: 10px 24px;">⚡ Ask Gemini</button>
+                                <button type="button" class="btn btn-secondary" style="width: auto; padding: 10px 20px; color: var(--text-main);" onclick="prefillAIPrompt('announcement')">📢 Notice Template</button>
+                                <button type="button" class="btn btn-secondary" style="width: auto; padding: 10px 20px; color: var(--text-main);" onclick="prefillAIPrompt('warning')">⚠️ Attendance Warning</button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Output Box -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Gemini AI Output Draft</h3>
+                        </div>
+                        <div id="ai-output-container" style="padding: 15px; background: rgba(0,0,0,0.15); border-radius: 12px; min-height: 250px; font-size: 0.95rem; line-height: 1.6; max-height: 350px; overflow-y: auto;">
+                            <p style="color: var(--text-muted); text-align: center; padding-top: 90px; margin: 0;">
+                                Generated draft suggestions will appear here...
+                            </p>
+                        </div>
+                        <div id="ai-action-buttons" style="margin-top: 15px; display: none; gap: 10px;">
+                            <button class="btn" style="width: auto; padding: 8px 16px; font-size: 0.85rem;" onclick="copyAIOutput()">📋 Copy to Clipboard</button>
+                            <button class="btn btn-secondary" style="width: auto; padding: 8px 16px; font-size: 0.85rem; color: var(--text-main);" onclick="useAIOutputAsNotice()">📢 Publish to Bulletin</button>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- Add Student Modal -->
+    <div class="modal-overlay" id="modal-add-student">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Add New Student Profile</h3>
+                <button class="modal-close" onclick="closeModal('modal-add-student')">✕</button>
+            </div>
+            <form id="add-student-form">
+                <div class="form-group">
+                    <label for="add-student-id">Student ID (Required & Unique)</label>
+                    <input type="text" id="add-student-id" class="form-control" placeholder="e.g. STU101" required>
+                </div>
+                <div class="form-group">
+                    <label for="add-student-name">Full Name</label>
+                    <input type="text" id="add-student-name" class="form-control" placeholder="e.g. Bob Smith" required>
+                </div>
+                <div class="form-group">
+                    <label for="add-student-email">Email Address</label>
+                    <input type="email" id="add-student-email" class="form-control" placeholder="e.g. bob@school.com" required>
+                </div>
+                <div class="form-group">
+                    <label for="add-student-phone">Phone Number</label>
+                    <input type="tel" id="add-student-phone" class="form-control" placeholder="e.g. 555-0199">
+                </div>
+                <div class="form-group">
+                    <label for="add-student-dept">Department</label>
+                    <select id="add-student-dept" class="form-control" required>
+                        <option value="Computer Science">Computer Science</option>
+                        <option value="Information Technology">Information Technology</option>
+                        <option value="Electronics & Communication">Electronics & Communication</option>
+                        <option value="Mechanical Engineering">Mechanical Engineering</option>
+                        <option value="Civil Engineering">Civil Engineering</option>
+                        <option value="Business Administration">Business Administration</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="add-student-year">Academic Year</label>
+                    <select id="add-student-year" class="form-control" required>
+                        <option value="1st Year">1st Year</option>
+                        <option value="2nd Year">2nd Year</option>
+                        <option value="3rd Year">3rd Year</option>
+                        <option value="4th Year">4th Year</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="add-student-dob">Date of Birth</label>
+                    <input type="date" id="add-student-dob" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label for="add-student-password">Login Password (Defaults to ID if empty)</label>
+                    <input type="password" id="add-student-password" class="form-control" placeholder="Enter custom password">
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn btn-secondary" style="width:auto;" onclick="closeModal('modal-add-student')">Cancel</button>
+                    <button type="submit" class="btn" style="width:auto;">Register Student</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ============================================================ -->
+    <!-- UNIFIED Student Record Modal (Profile + Marks + Attendance)  -->
+    <!-- ============================================================ -->
+    <div class="modal-overlay" id="modal-student-record">
+        <div class="modal-content" style="max-width: 780px; padding: 0; overflow: hidden;">
+
+            <!-- Modal Header with student badge -->
+            <div class="modal-header" style="padding: 20px 24px; background: linear-gradient(135deg, rgba(99,102,241,0.2), rgba(139,92,246,0.15)); border-bottom: 1px solid var(--border-color);">
+                <div>
+                    <h3 id="mgmt-student-title" style="margin:0; font-size:1.15rem;">Student Record</h3>
+                    <p id="mgmt-student-subtitle" style="margin:4px 0 0; font-size:0.8rem; color:var(--text-muted);"></p>
+                </div>
+                <button class="modal-close" onclick="closeModal('modal-student-record')">✕</button>
+            </div>
+
+            <!-- Tab Navigation -->
+            <div style="display:flex; border-bottom: 1px solid var(--border-color); background: rgba(0,0,0,0.15);">
+                <button class="mgmt-tab active" id="tab-btn-profile" onclick="switchMgmtTab('profile')">👤 Profile</button>
+                <button class="mgmt-tab" id="tab-btn-marks" onclick="switchMgmtTab('marks')">📊 Marks</button>
+                <button class="mgmt-tab" id="tab-btn-attendance" onclick="switchMgmtTab('attendance')">📅 Attendance</button>
+            </div>
+
+            <div style="padding: 22px 24px; max-height: 65vh; overflow-y: auto;">
+
+                <!-- ───────── TAB: PROFILE ───────── -->
+                <div id="mgmt-tab-profile" class="mgmt-tab-content">
+                    <form id="mgmt-edit-form">
+                        <input type="hidden" id="mgmt-student-id">
+                        <div style="display:grid; grid-template-columns:1fr 1fr; gap:14px;">
+                            <div class="form-group" style="margin-bottom:0;">
+                                <label for="mgmt-name">Full Name</label>
+                                <input type="text" id="mgmt-name" class="form-control" required>
+                            </div>
+                            <div class="form-group" style="margin-bottom:0;">
+                                <label for="mgmt-email">Email Address</label>
+                                <input type="email" id="mgmt-email" class="form-control" required>
+                            </div>
+                            <div class="form-group" style="margin-bottom:0;">
+                                <label for="mgmt-phone">Phone Number</label>
+                                <input type="tel" id="mgmt-phone" class="form-control" placeholder="e.g. 9876543210">
+                            </div>
+                            <div class="form-group" style="margin-bottom:0;">
+                                <label for="mgmt-dob">Date of Birth</label>
+                                <input type="date" id="mgmt-dob" class="form-control">
+                            </div>
+                            <div class="form-group" style="margin-bottom:0;">
+                                <label for="mgmt-dept">Department</label>
+                                <select id="mgmt-dept" class="form-control" required>
+                                    <option value="Computer Science">Computer Science</option>
+                                    <option value="Information Technology">Information Technology</option>
+                                    <option value="Electronics & Communication">Electronics & Communication</option>
+                                    <option value="Mechanical Engineering">Mechanical Engineering</option>
+                                    <option value="Civil Engineering">Civil Engineering</option>
+                                    <option value="Business Administration">Business Administration</option>
+                                </select>
+                            </div>
+                            <div class="form-group" style="margin-bottom:0;">
+                                <label for="mgmt-year">Academic Year</label>
+                                <select id="mgmt-year" class="form-control" required>
+                                    <option value="1st Year">1st Year</option>
+                                    <option value="2nd Year">2nd Year</option>
+                                    <option value="3rd Year">3rd Year</option>
+                                    <option value="4th Year">4th Year</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="modal-actions" style="margin-top:20px; padding-top:16px; border-top:1px solid var(--border-color);">
+                            <button type="button" class="btn btn-secondary" style="width:auto;" onclick="closeModal('modal-student-record')">Close</button>
+                            <button type="submit" class="btn" style="width:auto;">💾 Save Profile</button>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- ───────── TAB: MARKS ───────── -->
+                <div id="mgmt-tab-marks" class="mgmt-tab-content" style="display:none;">
+                    <!-- Summary bar -->
+                    <div style="padding:12px 16px; background:rgba(255,255,255,0.03); border:1px solid var(--border-color); border-radius:10px; margin-bottom:18px; font-size:0.88rem;">
+                        <span id="mgmt-marks-summary">Loading...</span>
+                    </div>
+
+                    <!-- Marks table -->
+                    <div style="max-height:200px; overflow-y:auto; margin-bottom:20px;">
+                        <table class="table" id="mgmt-marks-table">
+                            <thead>
+                                <tr>
+                                    <th>Subject</th>
+                                    <th>Obtained</th>
+                                    <th>Max</th>
+                                    <th>Grade</th>
+                                    <th>Action</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+
+                    <!-- Add / Update marks form -->
+                    <div style="background:rgba(99,102,241,0.06); border:1px solid rgba(99,102,241,0.2); border-radius:10px; padding:16px;">
+                        <h4 style="margin:0 0 14px; font-size:0.9rem; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:.05em;">Add / Update Subject Score</h4>
+                        <form id="mgmt-marks-form" style="display:grid; grid-template-columns:2fr 1fr 1fr auto; gap:10px; align-items:end;">
+                            <div class="form-group" style="margin-bottom:0;">
+                                <label style="font-size:0.75rem;">Subject Name</label>
+                                <input type="text" id="mgmt-mark-subject" class="form-control" placeholder="e.g. Mathematics" required>
+                            </div>
+                            <div class="form-group" style="margin-bottom:0;">
+                                <label style="font-size:0.75rem;">Marks Obtained</label>
+                                <input type="number" step="0.5" id="mgmt-mark-obtained" class="form-control" placeholder="85" min="0" required>
+                            </div>
+                            <div class="form-group" style="margin-bottom:0;">
+                                <label style="font-size:0.75rem;">Max Marks</label>
+                                <input type="number" id="mgmt-mark-max" class="form-control" placeholder="100" value="100" min="1">
+                            </div>
+                            <button type="submit" class="btn" style="padding:12px 18px;">Save</button>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- ───────── TAB: ATTENDANCE ───────── -->
+                <div id="mgmt-tab-attendance" class="mgmt-tab-content" style="display:none;">
+                    <!-- Summary bar -->
+                    <div style="padding:12px 16px; background:rgba(255,255,255,0.03); border:1px solid var(--border-color); border-radius:10px; margin-bottom:18px; font-size:0.88rem;">
+                        <span id="mgmt-att-summary">Loading...</span>
+                    </div>
+
+                    <!-- Attendance history -->
+                    <div style="max-height:200px; overflow-y:auto; margin-bottom:20px;">
+                        <table class="table" id="mgmt-att-table">
+                            <thead>
+                                <tr><th>Date</th><th>Status</th></tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+
+                    <!-- Log attendance form -->
+                    <div style="background:rgba(16,185,129,0.06); border:1px solid rgba(16,185,129,0.2); border-radius:10px; padding:16px;">
+                        <h4 style="margin:0 0 14px; font-size:0.9rem; font-weight:600; color:var(--text-muted); text-transform:uppercase; letter-spacing:.05em;">Log Attendance Entry</h4>
+                        <form id="mgmt-att-form" style="display:grid; grid-template-columns:1fr 1fr auto; gap:10px; align-items:end;">
+                            <div class="form-group" style="margin-bottom:0;">
+                                <label style="font-size:0.75rem;">Date</label>
+                                <input type="date" id="mgmt-att-date" class="form-control" required>
+                            </div>
+                            <div class="form-group" style="margin-bottom:0;">
+                                <label style="font-size:0.75rem;">Status</label>
+                                <select id="mgmt-att-status" class="form-control" required>
+                                    <option value="Present">✅ Present</option>
+                                    <option value="Absent">❌ Absent</option>
+                                    <option value="Late">⚠️ Late</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn" style="padding:12px 18px;">Log</button>
+                        </form>
+                    </div>
+                </div>
+
+            </div><!-- /panel body -->
+        </div>
+    </div>
+
+    <!-- Toast Notifications Container -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <style>
+        /* Unified management modal tabs */
+        .mgmt-tab {
+            flex: 1;
+            padding: 13px 10px;
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-family: var(--font);
+            font-size: 0.88rem;
+            font-weight: 500;
+            cursor: pointer;
+            border-bottom: 3px solid transparent;
+            transition: all 0.2s;
+        }
+        .mgmt-tab:hover { color: var(--text-main); background: rgba(255,255,255,0.03); }
+        .mgmt-tab.active { color: var(--primary); border-bottom-color: var(--primary); background: rgba(99,102,241,0.06); }
+        .mgmt-tab-content { animation: fadeIn 0.2s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+    </style>
+
+    <script src="{{ url_for('static', filename='js/admin.js') }}"></script>
+</body>
+</html>

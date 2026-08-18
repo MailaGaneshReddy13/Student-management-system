@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Online Student Management System</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    <div class="bg-mesh">
+        <div class="bg-circle-1"></div>
+        <div class="bg-circle-2"></div>
+    </div>
+
+    <div class="auth-container">
+        <div class="auth-card">
+            <div class="auth-header">
+                <h1>Student Portal</h1>
+                <p>Online Student Management System</p>
+            </div>
+
+            <!-- Tabs -->
+            <div class="auth-tabs">
+                <button class="auth-tab active" onclick="switchTab('login')">Sign In</button>
+                <button class="auth-tab" onclick="switchTab('register')">Register</button>
+            </div>
+
+            <!-- Login Form -->
+            <div id="form-login-section">
+                <form id="login-form">
+                    <div class="form-group">
+                        <label for="login-role">Login As</label>
+                        <select id="login-role" class="form-control">
+                            <option value="student">Student</option>
+                            <option value="admin">Administrator</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="login-username">Email / ID</label>
+                        <input type="text" id="login-username" class="form-control" placeholder="Enter your email or student ID" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="login-password">Password</label>
+                        <input type="password" id="login-password" class="form-control" placeholder="••••••••" required>
+                    </div>
+                    <button type="submit" class="btn">Sign In</button>
+                </form>
+                <div class="auth-footer">
+                    <p>Default Admin: <strong>admin@school.com</strong> / <strong>admin123</strong></p>
+                </div>
+            </div>
+
+            <!-- Registration Form (Students & Admins) -->
+            <div id="form-register-section" style="display: none;">
+                <form id="register-form">
+                    <!-- Role Selector -->
+                    <div class="form-group">
+                        <label for="reg-role">Register As</label>
+                        <select id="reg-role" class="form-control" onchange="toggleRegisterRole()">
+                            <option value="student">Student</option>
+                            <option value="admin">Administrator</option>
+                        </select>
+                    </div>
+
+                    <!-- Student-only fields -->
+                    <div id="reg-student-fields">
+                        <div class="form-group">
+                            <label for="reg-id">Student ID</label>
+                            <input type="text" id="reg-id" class="form-control" placeholder="e.g. STU001">
+                        </div>
+                        <div class="form-group">
+                            <label for="reg-dept">Department</label>
+                            <select id="reg-dept" class="form-control">
+                                <option value="">-- Select Department --</option>
+                                <option value="Computer Science">Computer Science</option>
+                                <option value="Information Technology">Information Technology</option>
+                                <option value="Electronics & Communication">Electronics & Communication</option>
+                                <option value="Mechanical Engineering">Mechanical Engineering</option>
+                                <option value="Civil Engineering">Civil Engineering</option>
+                                <option value="Business Administration">Business Administration</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="reg-year">Academic Year</label>
+                            <select id="reg-year" class="form-control">
+                                <option value="">-- Select Year --</option>
+                                <option value="1st Year">1st Year</option>
+                                <option value="2nd Year">2nd Year</option>
+                                <option value="3rd Year">3rd Year</option>
+                                <option value="4th Year">4th Year</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="reg-dob">Date of Birth</label>
+                            <input type="date" id="reg-dob" class="form-control">
+                        </div>
+                    </div>
+
+                    <!-- Common fields -->
+                    <div class="form-group">
+                        <label for="reg-name">Full Name</label>
+                        <input type="text" id="reg-name" class="form-control" placeholder="e.g. Alice Johnson" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="reg-email">Email Address</label>
+                        <input type="email" id="reg-email" class="form-control" placeholder="e.g. alice@school.com" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="reg-phone">Phone Number</label>
+                        <input type="tel" id="reg-phone" class="form-control" placeholder="e.g. +1234567890">
+                    </div>
+                    <div class="form-group">
+                        <label for="reg-password">Password</label>
+                        <input type="password" id="reg-password" class="form-control" placeholder="••••••••" required>
+                    </div>
+                    <button type="submit" class="btn" id="reg-submit-btn">🎓 Register Student Account</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div id="toast-container" class="toast-container"></div>
+
+    <script>
+        // Toggle student-only fields based on role selection
+        function toggleRegisterRole() {
+            const role = document.getElementById('reg-role').value;
+            const studentFields = document.getElementById('reg-student-fields');
+            const submitBtn = document.getElementById('reg-submit-btn');
+            if (role === 'admin') {
+                studentFields.style.display = 'none';
+                submitBtn.textContent = '🔐 Register Admin Account';
+            } else {
+                studentFields.style.display = 'block';
+                submitBtn.textContent = '🎓 Register Student Account';
+            }
+        }
+
+        // Switch between Sign In and Register tabs
+        function switchTab(mode) {
+            const tabs = document.querySelectorAll('.auth-tab');
+            const loginSection = document.getElementById('form-login-section');
+            const regSection = document.getElementById('form-register-section');
+
+            if (mode === 'login') {
+                tabs[0].classList.add('active');
+                tabs[1].classList.remove('active');
+                loginSection.style.display = 'block';
+                regSection.style.display = 'none';
+            } else {
+                tabs[0].classList.remove('active');
+                tabs[1].classList.add('active');
+                loginSection.style.display = 'none';
+                regSection.style.display = 'block';
+            }
+        }
+
+        // Toast Helper
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `toast ${type}`;
+            let icon = '✓';
+            if (type === 'error') icon = '✕';
+            if (type === 'warning') icon = '⚠';
+
+            toast.innerHTML = `<span>${icon}</span> <div>${message}</div>`;
+            container.appendChild(toast);
+
+            setTimeout(() => {
+                toast.style.opacity = '0';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        // Handle Login Submission
+        document.getElementById('login-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const username = document.getElementById('login-username').value.trim();
+            const password = document.getElementById('login-password').value;
+            const role = document.getElementById('login-role').value;
+
+            // Simple validation
+            if (role === 'admin' && !username.includes('@')) {
+                showToast('Administrators use email as username.', 'warning');
+            }
+
+            fetch('/api/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+            })
+            .then(res => res.json())
+            .then(res => {
+                if (res.success) {
+                    showToast(res.message, 'success');
+                    setTimeout(() => {
+                        window.location.href = res.role === 'admin' ? '/admin/dashboard' : '/student/dashboard';
+                    }, 800);
+                } else {
+                    showToast(res.message, 'error');
+                }
+            })
+            .catch(err => {
+                console.error(err);
+                showToast('Server error. Please try again later.', 'error');
+            });
+        });
+
+        // Handle Registration Submission
+        document.getElementById('register-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const role = document.getElementById('reg-role').value;
+            const name = document.getElementById('reg-name').value.trim();
+            const email = document.getElementById('reg-email').value.trim();
+            const phone = document.getElementById('reg-phone').value.trim();
+            const password = document.getElementById('reg-password').value;
+
+            if (role === 'admin') {
+                // Admin registration
+                if (!name || !email || !password) {
+                    showToast('Please fill in all required fields.', 'warning');
+                    return;
+                }
+                fetch('/api/auth/register-admin', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, email, phone, password })
+                })
+                .then(res => res.json())
+                .then(res => {
+                    if (res.success) {
+                        showToast(res.message + ' You can now log in.', 'success');
+                        document.getElementById('register-form').reset();
+                        toggleRegisterRole();
+                        setTimeout(() => switchTab('login'), 1500);
+                    } else {
+                        showToast(res.message, 'error');
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    showToast('Server error. Please try again later.', 'error');
+                });
+            } else {
+                // Student registration
+                const student_id = document.getElementById('reg-id').value.trim();
+                const department = document.getElementById('reg-dept').value;
+                const year = document.getElementById('reg-year').value;
+                const dob = document.getElementById('reg-dob').value;
+
+                if (!student_id || !department || !year) {
+                    showToast('Please fill in all student fields (ID, Department, Year).', 'warning');
+                    return;
+                }
+
+                fetch('/api/auth/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ student_id, name, email, phone, department, year, dob, password })
+                })
+                .then(res => res.json())
+                .then(res => {
+                    if (res.success) {
+                        showToast(res.message + ' You can now log in.', 'success');
+                        document.getElementById('register-form').reset();
+                        setTimeout(() => switchTab('login'), 1500);
+                    } else {
+                        showToast(res.message, 'error');
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    showToast('Server error. Please try again later.', 'error');
+                });
+            }
+        });
+    </script>
+</body>
+</html>
